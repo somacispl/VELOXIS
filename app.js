@@ -1232,7 +1232,7 @@ function renderHomeView() {
       <div class="absolute -right-16 -top-16 w-96 h-96 rounded-full bg-brand-primary/10 blur-3xl"></div>
       <div class="absolute -left-16 -bottom-16 w-96 h-96 rounded-full bg-brand-accent/5 blur-3xl"></div>
       
-      <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 items-center gap-12 relative z-10">
+      <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-2 items-center gap-12 relative z-10">
         <div class="space-y-6 md:max-w-md">
           <span class="inline-block bg-brand-primary text-white text-xs font-bold tracking-wider px-3.5 py-1 rounded-full uppercase">Fall/Winter Collection</span>
           <h1 class="font-heading font-extrabold text-4xl md:text-5xl lg:text-6xl leading-[1.08] tracking-tight">
@@ -1262,7 +1262,7 @@ function renderHomeView() {
 
     <!-- 2. Trust Bar -->
     <section class="bg-white border-b border-slate-200 py-6">
-      <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
         <div class="flex items-center justify-center gap-3">
           <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-brand-primary flex-shrink-0">
             <i data-lucide="truck" class="w-5 h-5"></i>
@@ -1303,7 +1303,7 @@ function renderHomeView() {
     </section>
 
     <!-- 3. Category Showcase -->
-    <section class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
+    <section class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
       <div class="text-center max-w-lg mx-auto mb-10 md:mb-12">
         <h2 class="font-heading font-extrabold text-3xl text-brand-secondary">Explore Categories</h2>
         <p class="text-brand-body text-xs mt-2">Find the exact shoe build designed for your speed, terrain, lift, or everyday lifestyle.</p>
@@ -1315,7 +1315,7 @@ function renderHomeView() {
 
     <!-- 4. Featured Products -->
     <section class="bg-slate-50 py-16 md:py-20 border-y border-slate-200">
-      <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8">
+      <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
         <div class="flex flex-col sm:flex-row items-center justify-between mb-10 md:mb-12">
           <div class="text-center sm:text-left">
             <h2 class="font-heading font-extrabold text-3xl text-brand-secondary">Featured Products</h2>
@@ -1332,7 +1332,7 @@ function renderHomeView() {
     </section>
 
     <!-- 5. Why VELOXIS? -->
-    <section class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
+    <section class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-16 md:py-20">
       <div class="grid grid-cols-1 md:grid-cols-2 items-center gap-12">
         <div class="bg-slate-100 rounded-3xl p-6 md:p-8 flex items-center justify-center border border-slate-200">
           <div class="w-full max-w-[340px] h-[280px] md:h-[340px] bg-white border border-slate-200/50 rounded-2xl flex items-center justify-center p-6 shadow-medium overflow-hidden">
@@ -1379,7 +1379,7 @@ function renderHomeView() {
 
     <!-- 6. Testimonials -->
     <section class="bg-slate-50 py-16 md:py-20 border-t border-slate-200">
-      <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8">
+      <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8">
         <div class="text-center max-w-lg mx-auto mb-10 md:mb-12">
           <h2 class="font-heading font-extrabold text-3xl text-brand-secondary">What Our Community Says</h2>
           <p class="text-brand-body text-xs mt-2">Hear directly from runners, gym enthusiasts, and lifestyle creators.</p>
@@ -1464,7 +1464,7 @@ function renderHomeView() {
     <!-- 7. Closing CTA -->
     <section class="bg-brand-secondary text-white py-16 md:py-20 text-center border-t border-slate-850 relative overflow-hidden">
       <div class="absolute -right-10 -bottom-10 w-64 h-64 rounded-full bg-brand-primary/10 blur-2xl"></div>
-      <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 relative z-10 space-y-6">
+      <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 relative z-10 space-y-6">
         <h2 class="font-heading font-extrabold text-3xl md:text-4xl leading-tight">Ready to Move Beyond Limits?</h2>
         <p class="text-slate-400 text-xs md:text-sm max-w-md mx-auto">Get your pair today and experience next-generation athletic comfort and foot stability.</p>
         <a href="#shop" class="inline-block bg-brand-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-full transition-colors shadow-lg">
@@ -1641,7 +1641,7 @@ function renderShopView() {
   if (STATE.filters.priceRange[0] > 50 || STATE.filters.priceRange[1] < 300) activeFiltersCount += 1;
 
   $container.html(`
-    <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-10">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-10">
       
       <!-- Top Title and Sort Bar -->
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-6 mb-8">
@@ -2028,7 +2028,7 @@ function renderProductDetailView(productId) {
   }
 
   $container.html(`
-    <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-10">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-10">
       
       <!-- Breadcrumbs -->
       <nav class="flex items-center gap-2 text-xs text-slate-400 mb-8" aria-label="Breadcrumb">
@@ -2323,7 +2323,7 @@ function renderCartView() {
 
   if (STATE.cart.length === 0) {
     $container.html(`
-      <div class="max-w-[1200px] mx-auto px-4 py-20 text-center">
+      <div class="max-w-[1440px] mx-auto px-4 py-20 text-center">
         <div class="max-w-md mx-auto bg-white border border-slate-200 rounded-3xl p-8 shadow-light space-y-6">
           <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto">
             <i data-lucide="shopping-bag" class="w-8 h-8"></i>
@@ -2400,7 +2400,7 @@ function renderCartView() {
   const total = subtotal + tax;
 
   $container.html(`
-    <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-10">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-10">
       <h1 class="font-heading font-extrabold text-3xl text-brand-secondary mb-8">Shopping Cart</h1>
       
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -2509,7 +2509,7 @@ function renderCheckoutView() {
   const total = subtotal + tax;
 
   $container.html(`
-    <div class="max-w-[1200px] mx-auto px-4 md:px-6 lg:px-8 py-10">
+    <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-10">
       <h1 class="font-heading font-extrabold text-3xl text-brand-secondary mb-8">Checkout</h1>
       
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
