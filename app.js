@@ -2512,6 +2512,32 @@ function renderCartView() {
   lucide.createIcons();
 }
 
+// Helper to validate individual checkout field and show dynamic error text
+function validateCheckoutField(input) {
+  const $input = $(input);
+  const id = $input.attr('id');
+  if (!id) return true;
+  const $error = $(`#error-${id}`);
+  
+  if (!input.checkValidity()) {
+    $input.addClass('border-brand-error ring-brand-error/20 focus:ring-brand-error/20').removeClass('border-slate-200 focus:ring-brand-primary');
+    let msg = input.validationMessage;
+    if (input.validity.patternMismatch && $input.attr('title')) {
+      msg = $input.attr('title');
+    } else if (input.validity.valueMissing) {
+      msg = "This field is required.";
+    } else if (input.validity.tooShort) {
+      msg = `Must be at least ${$input.attr('minlength')} characters.`;
+    }
+    $error.text(msg).removeClass('hidden');
+    return false;
+  } else {
+    $input.removeClass('border-brand-error ring-brand-error/20 focus:ring-brand-error/20').addClass('border-slate-200');
+    $error.text('').addClass('hidden');
+    return true;
+  }
+}
+
 // 5. CHECKOUT VIEW
 function renderCheckoutView() {
   const $container = $('#main-content');
@@ -2565,36 +2591,43 @@ function renderCheckoutView() {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label for="checkout-name" class="block text-xs font-semibold text-slate-600 mb-1.5">Full Name *</label>
-                <input type="text" id="checkout-name" required placeholder="John Doe" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <input type="text" id="checkout-name" required pattern="^[a-zA-Z\\u00C0-\\u017F]+(\\s+[a-zA-Z\\u00C0-\\u017F]+)+$" title="Please enter both first and last name (letters and spaces only)." placeholder="John Doe" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-name"></p>
               </div>
               <div>
                 <label for="checkout-phone" class="block text-xs font-semibold text-slate-600 mb-1.5">Phone Number *</label>
-                <input type="tel" id="checkout-phone" required placeholder="+1 (555) 019-2834" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <input type="tel" id="checkout-phone" required pattern="^[0-9]{7,15}$" title="Please enter a valid phone number (digits only, 7 to 15 digits)." placeholder="5550192834" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-phone"></p>
               </div>
             </div>
 
             <div>
               <label for="checkout-email" class="block text-xs font-semibold text-slate-600 mb-1.5">Email Address *</label>
-              <input type="email" id="checkout-email" required placeholder="johndoe@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+              <input type="email" id="checkout-email" required pattern="^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$" title="Please enter a valid email address." placeholder="johndoe@example.com" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+              <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-email"></p>
             </div>
 
             <div>
               <label for="checkout-address" class="block text-xs font-semibold text-slate-600 mb-1.5">Street Address *</label>
-              <input type="text" id="checkout-address" required placeholder="123 Main St, Apt 4B" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+              <input type="text" id="checkout-address" required minlength="5" title="Please enter a complete street address (at least 5 characters)." placeholder="123 Main St, Apt 4B" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+              <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-address"></p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label for="checkout-city" class="block text-xs font-semibold text-slate-600 mb-1.5">City *</label>
-                <input type="text" id="checkout-city" required placeholder="San Francisco" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <input type="text" id="checkout-city" required pattern="^[a-zA-Z\\s\\-']{2,50}$" title="Please enter a valid city name (at least 2 letters)." placeholder="San Francisco" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-city"></p>
               </div>
               <div>
                 <label for="checkout-state" class="block text-xs font-semibold text-slate-600 mb-1.5">State *</label>
-                <input type="text" id="checkout-state" required placeholder="California" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <input type="text" id="checkout-state" required pattern="^[a-zA-Z\\s\\-']{2,50}$" title="Please enter a valid state name (at least 2 letters)." placeholder="California" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-state"></p>
               </div>
               <div>
                 <label for="checkout-zip" class="block text-xs font-semibold text-slate-600 mb-1.5">Postal/ZIP Code *</label>
-                <input type="text" id="checkout-zip" required placeholder="94103" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <input type="text" id="checkout-zip" required pattern="^[0-9]{5,10}$" title="Please enter a valid postal/zip code (digits only, 5 to 10 digits)." placeholder="94103" class="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-xs text-brand-secondary focus:outline-none focus:ring-2 focus:ring-brand-primary focus:bg-white transition-all">
+                <p class="text-[10px] text-brand-error mt-1 hidden" id="error-checkout-zip"></p>
               </div>
             </div>
 
@@ -2669,17 +2702,37 @@ function renderCheckoutView() {
   // Handle Form submission on Place Order button click
   $('#checkout-place-order-btn').on('click', function(e) {
     e.preventDefault();
-    // Validate checkout form
     const form = document.getElementById('checkout-form');
-    if (form.checkValidity()) {
+    if (!form) return;
+
+    let isValid = true;
+    let firstInvalid = null;
+
+    $(form).find('input').each(function() {
+      const isFieldValid = validateCheckoutField(this);
+      if (!isFieldValid) {
+        isValid = false;
+        if (!firstInvalid) {
+          firstInvalid = this;
+        }
+      }
+    });
+
+    if (isValid) {
       const orderNum = 'VLX-' + Math.floor(10000 + Math.random() * 90000);
       STATE.cart = [];
       saveCart();
       showToast("Order placed successfully via Cash on Delivery!", "success");
       navigateTo(`#confirmation?orderNum=${orderNum}`);
-    } else {
-      form.reportValidity();
+    } else if (firstInvalid) {
+      firstInvalid.focus();
+      showToast("Please correct the invalid fields in the form.", "error");
     }
+  });
+
+  // Bind real-time input/blur validation triggers
+  $('#checkout-form input').on('input blur', function() {
+    validateCheckoutField(this);
   });
 
   $('#checkout-form').on('submit', function(e) {
