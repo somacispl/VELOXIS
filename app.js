@@ -666,7 +666,7 @@ function renderMiniCart() {
       <div class="flex flex-col items-center justify-center h-full text-center text-slate-400">
         <i data-lucide="shopping-bag" class="w-12 h-12 mb-3 stroke-[1.25]"></i>
         <p class="font-medium text-slate-600 text-sm">Your cart is empty</p>
-        <a href="#shop" class="text-xs text-brand-primary hover:underline mt-1 font-semibold mini-cart-shop-now">Shop collection now</a>
+        <a href="products.html" class="text-xs text-brand-primary hover:underline mt-1 font-semibold mini-cart-shop-now">Shop collection now</a>
       </div>
     `);
     $subtotalSpan.text('$0.00');
@@ -998,7 +998,7 @@ function renderQuickViewBody(product) {
           <div>
             <div class="flex justify-between items-center mb-2">
               <span class="text-xs font-semibold text-slate-700">Select Size (US)</span>
-              <a href="#" class="text-[10px] text-brand-primary hover:underline font-semibold" onclick="showToast('Size chart: Standard US Men\\'s sizes apply.', 'info'); return false;">Size Guide</a>
+              <a href="#" class="text-[10px] text-brand-primary hover:underline font-semibold" onclick="showToast('Size chart: Standard US Men\'s sizes apply.', 'info'); return false;">Size Guide</a>
             </div>
             <div class="grid grid-cols-5 gap-2" id="quick-view-sizes-container">
               ${sizesHtml}
@@ -1103,7 +1103,7 @@ function runLiveSearch(query) {
   let html = '';
   matches.forEach(p => {
     html += `
-      <a href="#product?id=${p.id}" class="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 search-result-item" data-id="${p.id}">
+      <a href="product.html?id=${p.id}" class="flex items-center gap-3 p-3 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 search-result-item" data-id="${p.id}">
         <div class="w-10 h-10 bg-slate-50 border border-slate-200 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0">
           ${getProductImage(p, 0)}
         </div>
@@ -1128,37 +1128,38 @@ function runLiveSearch(query) {
 
 // ================= ROUTER & VIEW CONTROLLER =================
 function handleRouting() {
-  const hash = window.location.hash || '#home';
-  
-  // Slide out cart drawer if open
+  // Slide out drawers if open
   closeMiniCart();
+  closeWishlist();
+  
+  // Get current page file name
+  let filename = window.location.pathname.split('/').pop() || 'index.html';
+  if (filename === '') {
+    filename = 'index.html';
+  }
+  
+  // Parse URL query parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const query = {};
+  for (const [key, val] of urlParams.entries()) {
+    query[key] = val;
+  }
   
   // Highlight navigation link
   $('.nav-link').removeClass('text-brand-primary').addClass('text-brand-body');
-  $(`.nav-link[href="${hash.split('?')[0]}"]`).addClass('text-brand-primary').removeClass('text-brand-body');
+  $(`.nav-link[href="${filename}"]`).addClass('text-brand-primary').removeClass('text-brand-body');
   
   // Smoothly swap view content
-  const $container = $('#view-container');
+  const $container = $('#main-content');
   $container.removeClass('opacity-100').addClass('opacity-0');
   
   setTimeout(() => {
     window.scrollTo({ top: 0, behavior: 'instant' });
-    
-    // Parse router query parameters
-    const [path, queryStr] = hash.split('?');
-    const query = {};
-    if (queryStr) {
-      queryStr.split('&').forEach(pair => {
-        const [k, v] = pair.split('=');
-        query[decodeURIComponent(k)] = decodeURIComponent(v);
-      });
-    }
 
-    // Call corresponding renderer
-    if (path === '#home') {
+    // Call corresponding renderer based on page filename
+    if (filename === 'index.html' || filename === 'index' || filename === '/') {
       renderHomeView();
-    } else if (path === '#shop') {
-      // Load query parameters into state filters if present
+    } else if (filename === 'products.html' || filename === 'products') {
       if (query.category) {
         STATE.filters.categories = [query.category];
       }
@@ -1166,7 +1167,7 @@ function handleRouting() {
         STATE.filters.sort = query.sort;
       }
       renderShopView();
-    } else if (path === '#product') {
+    } else if (filename === 'product.html' || filename === 'product') {
       const prodId = parseInt(query.id) || 1;
       // Record recently viewed
       if (!STATE.recentlyViewed.includes(prodId)) {
@@ -1175,11 +1176,11 @@ function handleRouting() {
         saveRecentlyViewed();
       }
       renderProductDetailView(prodId);
-    } else if (path === '#cart') {
+    } else if (filename === 'cart.html' || filename === 'cart') {
       renderCartView();
-    } else if (path === '#checkout') {
+    } else if (filename === 'checkout.html' || filename === 'checkout') {
       renderCheckoutView();
-    } else if (path === '#confirmation') {
+    } else if (filename === 'confirmation.html' || filename === 'confirmation') {
       renderConfirmationView(query.orderNum || 'VLX-82761');
     } else {
       renderHomeView();
@@ -1192,15 +1193,37 @@ function handleRouting() {
   }, 200);
 }
 
-function navigateTo(hash) {
-  window.location.hash = hash;
+function navigateTo(route) {
+  if (route.startsWith('#')) {
+    const cleanRoute = route.substring(1);
+    const [path, query] = cleanRoute.split('?');
+    const queryPart = query ? '?' + query : '';
+    
+    if (path === 'home' || path === '') {
+      window.location.href = 'index.html' + queryPart;
+    } else if (path === 'shop') {
+      window.location.href = 'products.html' + queryPart;
+    } else if (path === 'product') {
+      window.location.href = 'product.html' + queryPart;
+    } else if (path === 'cart') {
+      window.location.href = 'cart.html' + queryPart;
+    } else if (path === 'checkout') {
+      window.location.href = 'checkout.html' + queryPart;
+    } else if (path === 'confirmation') {
+      window.location.href = 'confirmation.html' + queryPart;
+    } else {
+      window.location.href = cleanRoute + '.html' + queryPart;
+    }
+  } else {
+    window.location.href = route;
+  }
 }
 
 // ================= VIEW RENDERERS =================
 
 // 1. HOME VIEW
 function renderHomeView() {
-  const $container = $('#view-container');
+  const $container = $('#main-content');
   
   // Category Showcase List
   const categories = ["Running", "Training", "Sneakers", "Hiking", "Basketball", "Football", "Lifestyle"];
@@ -1218,7 +1241,7 @@ function renderHomeView() {
   categories.forEach(cat => {
     const c = categoryColors[cat] || { bg: 'bg-slate-50', text: 'text-slate-600', icon: 'tag' };
     categoriesHtml += `
-      <a href="#shop?category=${cat}" class="flex flex-col items-center justify-center p-6 bg-white border border-slate-200 rounded-2xl hover:border-brand-primary hover:shadow-medium transition-all duration-300 group">
+      <a href="products.html?category=${cat}" class="flex flex-col items-center justify-center p-6 bg-white border border-slate-200 rounded-2xl hover:border-brand-primary hover:shadow-medium transition-all duration-300 group">
         <div class="w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${c.bg} border group-hover:scale-110 transition-transform">
           <i data-lucide="${c.icon}" class="${c.text} w-6 h-6"></i>
         </div>
@@ -1244,7 +1267,7 @@ function renderHomeView() {
         </button>
 
         <!-- Product Image Frame -->
-        <a href="#product?id=${p.id}" class="h-48 md:h-56 bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden block">
+        <a href="product.html?id=${p.id}" class="h-48 md:h-56 bg-slate-50 flex items-center justify-center p-6 relative overflow-hidden block">
           <div class="product-card-img-zoom w-full h-full flex items-center justify-center">
             ${getProductImage(p, 0, 'w-full h-full object-contain')}
           </div>
@@ -1259,7 +1282,7 @@ function renderHomeView() {
                 <i data-lucide="star" class="w-3.5 h-3.5 fill-brand-warning text-brand-warning mr-0.5"></i> ${p.rating}
               </div>
             </div>
-            <a href="#product?id=${p.id}" class="hover:text-brand-primary transition-colors block">
+            <a href="product.html?id=${p.id}" class="hover:text-brand-primary transition-colors block">
               <h3 class="font-heading font-bold text-slate-900 text-base md:text-lg leading-tight truncate">${p.name}</h3>
             </a>
             <p class="text-xs text-brand-body line-clamp-2 mt-1.5">${p.description}</p>
@@ -1310,10 +1333,10 @@ function renderHomeView() {
             Elevate your stride. Crafted with premium aerospace knit fibers, carbon launchplates, and multi-shock absorption technologies designed for daily runners, athletes, and street lifestyle creators.
           </p>
           <div class="flex flex-col sm:flex-row items-center gap-4 pt-2">
-            <a href="#shop" class="w-full sm:w-auto text-center bg-brand-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-full transition-colors flex items-center justify-center gap-2 shadow-lg">
+            <a href="products.html" class="w-full sm:w-auto text-center bg-brand-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-full transition-colors flex items-center justify-center gap-2 shadow-lg">
               Shop Now <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </a>
-            <a href="#shop?sort=newest" class="w-full sm:w-auto text-center border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-bold py-3.5 px-8 rounded-full transition-colors">
+            <a href="products.html?sort=newest" class="w-full sm:w-auto text-center border border-white/20 hover:border-white/50 hover:bg-white/5 text-white font-bold py-3.5 px-8 rounded-full transition-colors">
               Explore Collection
             </a>
           </div>
@@ -1389,7 +1412,7 @@ function renderHomeView() {
             <h2 class="font-heading font-extrabold text-3xl text-brand-secondary">Featured Products</h2>
             <p class="text-brand-body text-xs mt-2">Our top-selling products engineered for high performance comfort.</p>
           </div>
-          <a href="#shop" class="text-brand-primary hover:text-blue-700 text-xs font-bold flex items-center gap-1 mt-4 sm:mt-0 transition-colors">
+          <a href="products.html" class="text-brand-primary hover:text-blue-700 text-xs font-bold flex items-center gap-1 mt-4 sm:mt-0 transition-colors">
             Shop Full Catalog <i data-lucide="arrow-right" class="w-4 h-4"></i>
           </a>
         </div>
@@ -1535,7 +1558,7 @@ function renderHomeView() {
       <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 relative z-10 space-y-6">
         <h2 class="font-heading font-extrabold text-3xl md:text-4xl leading-tight">Ready to Move Beyond Limits?</h2>
         <p class="text-slate-400 text-xs md:text-sm max-w-md mx-auto">Get your pair today and experience next-generation athletic comfort and foot stability.</p>
-        <a href="#shop" class="inline-block bg-brand-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-full transition-colors shadow-lg">
+        <a href="products.html" class="inline-block bg-brand-primary hover:bg-blue-600 text-white font-bold py-3.5 px-8 rounded-full transition-colors shadow-lg">
           Shop Collection
         </a>
       </div>
@@ -1545,7 +1568,7 @@ function renderHomeView() {
 
 // 2. SHOP / PRODUCT LISTING VIEW (PLP)
 function renderShopView() {
-  const $container = $('#view-container');
+  const $container = $('#main-content');
   
   // Apply filtering logic in real-time
   const filtered = PRODUCTS.filter(p => {
@@ -1652,7 +1675,7 @@ function renderShopView() {
             <i data-lucide="heart" class="wishlist-toggle w-3.5 h-3.5 ${isWishlisted}" data-id="${p.id}"></i>
           </button>
           
-          <a href="#product?id=${p.id}" class="h-44 bg-slate-50 flex items-center justify-center p-5 relative overflow-hidden block">
+          <a href="product.html?id=${p.id}" class="h-44 bg-slate-50 flex items-center justify-center p-5 relative overflow-hidden block">
             <div class="product-card-img-zoom w-full h-full flex items-center justify-center">
               ${getProductImage(p, 0, 'w-full h-full object-contain')}
             </div>
@@ -1666,7 +1689,7 @@ function renderShopView() {
                   <i data-lucide="star" class="w-3.5 h-3.5 fill-brand-warning text-brand-warning mr-0.5"></i> ${p.rating}
                 </div>
               </div>
-              <a href="#product?id=${p.id}" class="hover:text-brand-primary transition-colors block">
+              <a href="product.html?id=${p.id}" class="hover:text-brand-primary transition-colors block">
                 <h3 class="font-heading font-bold text-slate-900 text-sm md:text-base leading-tight truncate">${p.name}</h3>
               </a>
               <p class="text-[11px] text-slate-400 line-clamp-2 mt-1.5 leading-relaxed">${p.description}</p>
@@ -1998,10 +2021,10 @@ function renderShopView() {
 
 // 3. PRODUCT DETAIL VIEW (PDP)
 function renderProductDetailView(productId) {
-  const $container = $('#view-container');
+  const $container = $('#main-content');
   const product = PRODUCTS.find(p => p.id === productId);
   if (!product) {
-    $container.html(`<div class="py-20 text-center">Product not found. <a href="#shop" class="text-brand-primary font-bold">Go to shop</a></div>`);
+    $container.html(`<div class="py-20 text-center">Product not found. <a href="products.html" class="text-brand-primary font-bold">Go to shop</a></div>`);
     return;
   }
 
@@ -2050,7 +2073,7 @@ function renderProductDetailView(productId) {
   displayRelated.forEach(p => {
     relatedHtml += `
       <article class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-light hover:shadow-medium transition-all duration-300 product-card relative group flex flex-col justify-between">
-        <a href="#product?id=${p.id}" class="h-44 bg-slate-50 flex items-center justify-center p-5 relative overflow-hidden block">
+        <a href="product.html?id=${p.id}" class="h-44 bg-slate-50 flex items-center justify-center p-5 relative overflow-hidden block">
           <div class="product-card-img-zoom w-full h-full flex items-center justify-center">
             ${getProductImage(p, 0, 'w-full h-full object-contain')}
           </div>
@@ -2060,7 +2083,7 @@ function renderProductDetailView(productId) {
             <span class="text-[9px] font-bold text-brand-primary uppercase tracking-wider bg-brand-primary/10 rounded-full px-2 py-0.5">${p.category}</span>
             <span class="text-xs text-slate-500 font-semibold flex items-center"><i data-lucide="star" class="w-3.5 h-3.5 fill-brand-warning text-brand-warning mr-0.5"></i> ${p.rating}</span>
           </div>
-          <a href="#product?id=${p.id}" class="hover:text-brand-primary transition-colors block">
+          <a href="product.html?id=${p.id}" class="hover:text-brand-primary transition-colors block">
             <h4 class="font-heading font-bold text-slate-900 text-sm truncate">${p.name}</h4>
           </a>
           <div class="flex items-center justify-between mt-3">
@@ -2082,7 +2105,7 @@ function renderProductDetailView(productId) {
       const p = PRODUCTS.find(prod => prod.id === id);
       if (!p) return;
       recentlyHtml += `
-        <a href="#product?id=${p.id}" class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-brand-primary hover:shadow-light transition-all flex-shrink-0 min-w-[200px]">
+        <a href="product.html?id=${p.id}" class="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-brand-primary hover:shadow-light transition-all flex-shrink-0 min-w-[200px]">
           <div class="w-12 h-12 bg-slate-50 border border-slate-150 rounded-lg overflow-hidden flex items-center justify-center flex-shrink-0 p-1">
             ${getProductImage(p, 0)}
           </div>
@@ -2100,11 +2123,11 @@ function renderProductDetailView(productId) {
       
       <!-- Breadcrumbs -->
       <nav class="flex items-center gap-2 text-xs text-slate-400 mb-8" aria-label="Breadcrumb">
-        <a href="#home" class="hover:text-brand-secondary">Home</a>
+        <a href="index.html" class="hover:text-brand-secondary">Home</a>
         <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-        <a href="#shop" class="hover:text-brand-secondary">Shop</a>
+        <a href="products.html" class="hover:text-brand-secondary">Shop</a>
         <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
-        <a href="#shop?category=${product.category}" class="hover:text-brand-secondary">${product.category}</a>
+        <a href="products.html?category=${product.category}" class="hover:text-brand-secondary">${product.category}</a>
         <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
         <span class="text-slate-600 font-bold">${product.name}</span>
       </nav>
@@ -2387,7 +2410,7 @@ function changePdpColor(productId, colorIdx) {
 
 // 4. CART VIEW
 function renderCartView() {
-  const $container = $('#view-container');
+  const $container = $('#main-content');
 
   if (STATE.cart.length === 0) {
     $container.html(`
@@ -2400,7 +2423,7 @@ function renderCartView() {
             <h1 class="font-heading font-extrabold text-2xl text-brand-secondary">Your Cart is Empty</h1>
             <p class="text-xs text-slate-400 mt-2">Looks like you haven't added any sports shoes to your shopping list yet.</p>
           </div>
-          <a href="#shop" class="inline-block bg-brand-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xs transition-colors shadow-md">
+          <a href="products.html" class="inline-block bg-brand-primary hover:bg-blue-600 text-white font-bold py-3 px-8 rounded-full text-xs transition-colors shadow-md">
             Start Shopping
           </a>
         </div>
@@ -2431,7 +2454,7 @@ function renderCartView() {
         <!-- Info -->
         <div class="flex-grow text-center sm:text-left min-w-0">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
-            <a href="#product?id=${product.id}" class="hover:text-brand-primary transition-colors">
+            <a href="product.html?id=${product.id}" class="hover:text-brand-primary transition-colors">
               <h3 class="font-heading font-extrabold text-slate-900 text-base leading-tight truncate">${product.name}</h3>
             </a>
             <span class="font-heading font-extrabold text-brand-secondary text-base">$${itemTotal.toFixed(2)}</span>
@@ -2477,7 +2500,7 @@ function renderCartView() {
         <div class="lg:col-span-2 bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-light divide-y divide-slate-100">
           <div class="p-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
             <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5"><i data-lucide="shopping-bag" class="w-4 h-4 text-brand-primary"></i> ${STATE.cart.length} unique designs selected</span>
-            <a href="#shop" class="text-xs text-brand-primary hover:underline font-bold">Continue Shopping</a>
+            <a href="products.html" class="text-xs text-brand-primary hover:underline font-bold">Continue Shopping</a>
           </div>
           
           <div class="divide-y divide-slate-150/40">
@@ -2510,7 +2533,7 @@ function renderCartView() {
 
           <!-- Checkout actions -->
           <div class="space-y-3 pt-3">
-            <a href="#checkout" class="w-full text-center bg-brand-secondary hover:bg-brand-primary text-white font-extrabold py-3 rounded-full text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md">
+            <a href="checkout.html" class="w-full text-center bg-brand-secondary hover:bg-brand-primary text-white font-extrabold py-3 rounded-full text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md">
               Proceed to Checkout <i data-lucide="arrow-right" class="w-4 h-4"></i>
             </a>
             
@@ -2542,7 +2565,7 @@ function renderCartView() {
 
 // 5. CHECKOUT VIEW
 function renderCheckoutView() {
-  const $container = $('#view-container');
+  const $container = $('#main-content');
 
   if (STATE.cart.length === 0) {
     navigateTo('#cart');
@@ -2717,7 +2740,7 @@ function renderCheckoutView() {
 
 // 6. ORDER CONFIRMATION VIEW
 function renderConfirmationView(orderNum) {
-  const $container = $('#view-container');
+  const $container = $('#main-content');
 
   // Upsell list (4 best items from sneakers/training fallback)
   let upsellHtml = '';
@@ -2725,14 +2748,14 @@ function renderConfirmationView(orderNum) {
   upsell.forEach(p => {
     upsellHtml += `
       <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col justify-between shadow-light hover:shadow-medium transition-all duration-300 relative group">
-        <a href="#product?id=${p.id}" class="h-28 bg-slate-50 rounded-xl flex items-center justify-center p-3 overflow-hidden block mb-3">
+        <a href="product.html?id=${p.id}" class="h-28 bg-slate-50 rounded-xl flex items-center justify-center p-3 overflow-hidden block mb-3">
           <div class="product-card-img-zoom w-full h-full flex items-center justify-center">
             ${getProductImage(p, 0)}
           </div>
         </a>
         <div>
           <span class="text-[9px] font-bold text-brand-primary uppercase tracking-wider block mb-1">${p.category}</span>
-          <a href="#product?id=${p.id}" class="hover:text-brand-primary transition-colors block text-xs font-bold text-brand-secondary truncate">${p.name}</a>
+          <a href="product.html?id=${p.id}" class="hover:text-brand-primary transition-colors block text-xs font-bold text-brand-secondary truncate">${p.name}</a>
           <div class="flex items-center justify-between mt-3 pt-2 border-t border-slate-100">
             <span class="font-extrabold text-brand-secondary text-xs">$${p.price.toFixed(2)}</span>
             <button class="bg-slate-100 hover:bg-brand-primary hover:text-white text-slate-700 text-[10px] font-bold py-1 px-2.5 rounded-full transition-colors flex items-center gap-1" onclick="addToCart(${p.id})">
@@ -2787,7 +2810,7 @@ function renderConfirmationView(orderNum) {
         </div>
 
         <div class="grid grid-cols-2 gap-3">
-          <a href="#shop" class="w-full text-center border border-slate-250 hover:bg-slate-50 text-brand-secondary font-bold py-3 rounded-full text-xs transition-colors flex items-center justify-center gap-1.5">
+          <a href="products.html" class="w-full text-center border border-slate-250 hover:bg-slate-50 text-brand-secondary font-bold py-3 rounded-full text-xs transition-colors flex items-center justify-center gap-1.5">
             <i data-lucide="shopping-bag" class="w-4 h-4"></i> Continue Shopping
           </a>
           <button class="w-full text-center bg-brand-secondary hover:bg-brand-primary text-white font-bold py-3 rounded-full text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm" onclick="showToast('Tracking setup: Check email inbox for details.', 'info')">
@@ -2821,14 +2844,8 @@ $(document).ready(function() {
   renderMiniCart();
   renderWishlistDrawer();
 
-  // Run Router logic initial/hashchange
-  window.addEventListener('hashchange', handleRouting);
-  // Default to home page if empty
-  if (!window.location.hash) {
-    window.location.hash = '#home';
-  } else {
-    handleRouting();
-  }
+  // Run Router logic for the current page path on load
+  handleRouting();
 
   // Hamburger Mobile drawer trigger
   $('#mobile-menu-btn').on('click', function() {
