@@ -462,6 +462,7 @@ function saveCart() {
 function saveWishlist() {
   localStorage.setItem('veloxis_wishlist', JSON.stringify(STATE.wishlist));
   renderWishlistBadge();
+  renderWishlistDrawer();
 }
 
 function saveCompare() {
@@ -717,6 +718,73 @@ function renderMiniCart() {
 
   $container.html(cartHtml);
   $subtotalSpan.text(`$${subtotal.toFixed(2)}`);
+  lucide.createIcons();
+}
+
+// ================= WISHLIST DRAWER LOGIC =================
+function openWishlist() {
+  $('#wishlist-drawer').removeClass('hidden');
+  setTimeout(() => {
+    $('#wishlist-drawer-backdrop').removeClass('opacity-0');
+    $('#wishlist-drawer-content').removeClass('translate-x-full');
+  }, 10);
+}
+
+function closeWishlist() {
+  $('#wishlist-drawer-backdrop').addClass('opacity-0');
+  $('#wishlist-drawer-content').addClass('translate-x-full');
+  setTimeout(() => {
+    $('#wishlist-drawer').addClass('hidden');
+  }, 300);
+}
+
+function renderWishlistDrawer() {
+  const $container = $('#wishlist-drawer-items');
+  const $badge = $('#wishlist-drawer-count-badge');
+  $badge.text(STATE.wishlist.length);
+
+  if (STATE.wishlist.length === 0) {
+    $container.html(`
+      <div class="flex flex-col items-center justify-center h-full text-center text-slate-400">
+        <i data-lucide="heart" class="w-12 h-12 mb-3 stroke-[1.25] text-slate-350"></i>
+        <p class="font-medium text-slate-600 text-sm">Your wishlist is empty</p>
+        <p class="text-xs text-slate-400 mt-1">Add items to save them here</p>
+      </div>
+    `);
+    $('#wishlist-drawer-add-all').addClass('hidden');
+    lucide.createIcons();
+    return;
+  }
+
+  $('#wishlist-drawer-add-all').removeClass('hidden');
+
+  let wishlistHtml = '';
+  STATE.wishlist.forEach((prodId) => {
+    const product = PRODUCTS.find(p => p.id === prodId);
+    if (!product) return;
+    
+    wishlistHtml += `
+      <div class="flex items-center gap-4 py-3 border-b border-slate-100 last:border-0">
+        <div class="w-16 h-16 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 p-1">
+          ${getProductImage(product, 0, 'w-full h-full object-contain')}
+        </div>
+        <div class="flex-grow min-w-0">
+          <h4 class="font-heading font-bold text-sm text-brand-secondary truncate">${product.name}</h4>
+          <p class="text-xs font-bold text-brand-primary mt-1">$${product.price.toFixed(2)}</p>
+          <div class="flex items-center gap-2 mt-2">
+            <button class="bg-brand-secondary hover:bg-brand-primary text-white text-[10px] font-bold py-1 px-3 rounded-full transition-colors focus:outline-none" onclick="addToCart(${product.id}); toggleWishlist(${product.id}); renderWishlistDrawer();">
+              Add to Cart
+            </button>
+            <button class="text-[10px] text-slate-400 hover:text-brand-error focus:outline-none" onclick="toggleWishlist(${product.id}); renderWishlistDrawer();">
+              Remove
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  $container.html(wishlistHtml);
   lucide.createIcons();
 }
 
@@ -2748,6 +2816,10 @@ $(document).ready(function() {
   renderCartBadge();
   renderWishlistBadge();
   renderCompareBadge();
+  
+  // Render drawers initially on load to handle page refreshes
+  renderMiniCart();
+  renderWishlistDrawer();
 
   // Run Router logic initial/hashchange
   window.addEventListener('hashchange', handleRouting);
@@ -2782,6 +2854,28 @@ $(document).ready(function() {
 
   $('#cart-drawer-close, #cart-drawer-backdrop').on('click', function() {
     closeMiniCart();
+  });
+
+  // Wishlist Drawer open/close triggers
+  $('#wishlist-btn').on('click', function() {
+    renderWishlistDrawer();
+    openWishlist();
+  });
+
+  $('#wishlist-drawer-close, #wishlist-drawer-backdrop').on('click', function() {
+    closeWishlist();
+  });
+
+  $('#wishlist-drawer-add-all').on('click', function() {
+    if (STATE.wishlist.length === 0) return;
+    STATE.wishlist.forEach(id => {
+      addToCart(id, 1);
+    });
+    STATE.wishlist = [];
+    saveWishlist();
+    renderWishlistDrawer();
+    closeWishlist();
+    showToast("Added all wishlist items to cart!", "success");
   });
 
   // Search input live querying listeners

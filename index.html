@@ -346,6 +346,38 @@
     </div>
   </div>
 
+  <!-- ================= SIDE DRAWER WISHLIST (SLIDE-IN) ================= -->
+  <div id="wishlist-drawer" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
+    <!-- Overlay backdrop -->
+    <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-200" id="wishlist-drawer-backdrop"></div>
+    
+    <!-- Drawer Panel -->
+    <div class="fixed inset-y-0 right-0 w-full sm:max-w-md bg-white shadow-large flex flex-col transform translate-x-full transition-transform duration-300 ease-out z-50" id="wishlist-drawer-content">
+      <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <i data-lucide="heart" class="w-5 h-5 text-brand-error fill-brand-error"></i>
+          <h3 class="font-heading font-bold text-lg text-brand-secondary">Your Wishlist</h3>
+          <span id="wishlist-drawer-count-badge" class="bg-slate-100 text-brand-secondary text-xs font-semibold px-2 py-0.5 rounded-full">0</span>
+        </div>
+        <button id="wishlist-drawer-close" class="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors" aria-label="Close wishlist">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <!-- Wishlist Drawer Item List -->
+      <div id="wishlist-drawer-items" class="flex-grow p-6 overflow-y-auto space-y-4">
+        <!-- Dynamic content filled by app.js -->
+      </div>
+
+      <!-- Bottom action -->
+      <div class="p-6 border-t border-slate-100 bg-slate-50">
+        <button id="wishlist-drawer-add-all" class="w-full bg-brand-secondary hover:bg-brand-primary text-white font-extrabold py-3 rounded-full text-xs transition-all duration-200 flex items-center justify-center gap-1.5 shadow-md">
+          Add All to Cart <i data-lucide="shopping-bag" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- ================= QUICK VIEW MODAL ================= -->
   <div id="quick-view-modal" class="fixed inset-0 z-50 hidden" role="dialog" aria-modal="true">
     <div class="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity duration-200" id="quick-view-backdrop"></div>
