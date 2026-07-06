@@ -33,7 +33,7 @@ const PRODUCTS = [
       "Ultralight cushioning absorbs 90% of road impacts",
       "Glove-like fit with breathable knit zones"
     ],
-    image: "file:///C:/Users/CODECLOUDS-RESERVE/.gemini/antigravity-ide/brain/160484c9-5b73-47be-9d65-b8aa5c261dae/hero_shoe_1783340043630.png"
+    image: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=600&q=80"
   },
   {
     id: 2,
