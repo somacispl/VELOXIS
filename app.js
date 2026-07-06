@@ -448,7 +448,8 @@ const STATE = {
     genders: [],
     priceRange: [50, 300],
     sort: 'popular',
-    search: ''
+    search: '',
+    page: 1
   }
 };
 
@@ -1566,6 +1567,39 @@ function renderHomeView() {
   `);
 }
 
+// Helper to check if a product matches a selected filter color name
+function productMatchesColor(product, filterName) {
+  const colorMap = {
+    "Electric Blue": "#0B63F6",
+    "Neon Volt": "#A6FF00",
+    "Deep Navy": "#14213D",
+    "Stealth Black": "#101828",
+    "Crimson Red": "#DC2626",
+    "Charcoal Gray": "#475569",
+    "White Platinum": "#F8FAFC"
+  };
+  
+  const targetHex = colorMap[filterName];
+  if (!targetHex) return false;
+  
+  return product.colors.some(c => {
+    const cHex = c.hex.toUpperCase();
+    const tHex = targetHex.toUpperCase();
+    
+    // Hex match
+    if (cHex === tHex) return true;
+    
+    // Name match
+    const words = filterName.toLowerCase().split(' ');
+    if (words.some(word => c.name.toLowerCase().includes(word))) return true;
+    
+    // Special exception for Sunset Gold matching yellow/neon-volt
+    if (filterName === "Neon Volt" && cHex === '#F59E0B') return true;
+    
+    return false;
+  });
+}
+
 // 2. SHOP / PRODUCT LISTING VIEW (PLP)
 function renderShopView() {
   const $container = $('#main-content');
@@ -1582,7 +1616,7 @@ function renderShopView() {
     if (STATE.filters.sizes.length > 0 && !p.sizes.some(s => STATE.filters.sizes.includes(parseFloat(s)))) return false;
     
     // Colors filter
-    if (STATE.filters.colors.length > 0 && !p.colors.some(c => STATE.filters.colors.includes(c.name))) return false;
+    if (STATE.filters.colors.length > 0 && !STATE.filters.colors.some(colName => productMatchesColor(p, colName))) return false;
     
     // Price range
     if (p.price < STATE.filters.priceRange[0] || p.price > STATE.filters.priceRange[1]) return false;
@@ -1606,6 +1640,19 @@ function renderShopView() {
   } else if (STATE.filters.sort === 'newest') {
     filtered.sort((a, b) => b.id - a.id);
   }
+
+  // Apply pagination
+  const PAGE_SIZE = 6;
+  const totalProducts = filtered.length;
+  const totalPages = Math.ceil(totalProducts / PAGE_SIZE) || 1;
+  
+  if (!STATE.filters.page) STATE.filters.page = 1;
+  if (STATE.filters.page > totalPages) STATE.filters.page = totalPages;
+  if (STATE.filters.page < 1) STATE.filters.page = 1;
+  
+  const startIndex = (STATE.filters.page - 1) * PAGE_SIZE;
+  const endIndex = startIndex + PAGE_SIZE;
+  const pageProducts = filtered.slice(startIndex, endIndex);
 
   // Categories list checkboxes
   const categoriesList = ["Running", "Training", "Sneakers", "Hiking", "Basketball", "Football", "Lifestyle"];
@@ -1653,7 +1700,7 @@ function renderShopView() {
 
   // Render product grid cards
   let productsGridHtml = '';
-  if (filtered.length === 0) {
+  if (totalProducts === 0) {
     productsGridHtml = `
       <div class="col-span-full py-16 text-center bg-white border border-slate-200 rounded-2xl p-6">
         <i data-lucide="info" class="w-12 h-12 text-slate-300 mx-auto mb-3"></i>
@@ -1665,7 +1712,7 @@ function renderShopView() {
       </div>
     `;
   } else {
-    filtered.forEach(p => {
+    pageProducts.forEach(p => {
       const isWishlisted = STATE.wishlist.includes(p.id) ? 'text-brand-error fill-brand-error' : 'text-slate-400';
       const isCompared = STATE.compare.includes(p.id);
       
@@ -1731,6 +1778,41 @@ function renderShopView() {
   activeFiltersCount += STATE.filters.colors.length;
   if (STATE.filters.priceRange[0] > 50 || STATE.filters.priceRange[1] < 300) activeFiltersCount += 1;
 
+  const countText = totalProducts === 0 
+    ? `Showing 0 of 0 premium models.` 
+    : `Showing ${startIndex + 1}–${Math.min(endIndex, totalProducts)} of ${totalProducts} premium models.`;
+
+  // Generate Pagination Controls
+  let paginationHtml = '';
+  if (totalProducts > 0) {
+    const prevDisabled = STATE.filters.page === 1 ? 'disabled' : '';
+    const nextDisabled = STATE.filters.page === totalPages ? 'disabled' : '';
+    
+    let pageNumbersHtml = '';
+    for (let i = 1; i <= totalPages; i++) {
+      const activeClass = i === STATE.filters.page 
+        ? 'bg-brand-primary text-white font-bold w-8 h-8 rounded-full text-xs shadow-sm focus:outline-none' 
+        : 'border border-transparent hover:border-slate-205 text-slate-600 hover:bg-slate-50 font-semibold w-8 h-8 rounded-full text-xs transition-colors focus:outline-none';
+      pageNumbersHtml += `
+        <button class="shop-pagination-page-btn ${activeClass}" data-page="${i}">${i}</button>
+      `;
+    }
+    
+    paginationHtml = `
+      <div class="flex items-center justify-between border-t border-slate-200 mt-12 pt-6">
+        <button class="shop-pagination-prev-btn border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-brand-secondary font-semibold py-2 px-4 rounded-full text-xs transition-colors flex items-center gap-1.5 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed" ${prevDisabled}>
+          <i data-lucide="chevron-left" class="w-4 h-4"></i> Previous
+        </button>
+        <div class="flex items-center gap-1">
+          ${pageNumbersHtml}
+        </div>
+        <button class="shop-pagination-next-btn border border-slate-200 hover:border-slate-300 text-slate-600 hover:text-brand-secondary font-semibold py-2 px-4 rounded-full text-xs transition-colors flex items-center gap-1.5 focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed" ${nextDisabled}>
+          Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
+        </button>
+      </div>
+    `;
+  }
+
   $container.html(`
     <div class="max-w-[1440px] mx-auto px-4 md:px-6 lg:px-8 py-10">
       
@@ -1738,7 +1820,7 @@ function renderShopView() {
       <div class="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-6 mb-8">
         <div>
           <h1 class="font-heading font-extrabold text-3xl text-brand-secondary">Shop All Shoes</h1>
-          <p class="text-brand-body text-xs mt-1">Showing ${filtered.length} of ${PRODUCTS.length} premium models.</p>
+          <p class="text-brand-body text-xs mt-1" id="plp-count-label">${countText}</p>
         </div>
         <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
           
@@ -1833,20 +1915,7 @@ function renderShopView() {
           </div>
           
           <!-- Pagination -->
-          ${filtered.length > 0 ? `
-          <div class="flex items-center justify-between border-t border-slate-200 mt-12 pt-6">
-            <button class="border border-slate-200 hover:border-slate-300 text-slate-500 font-semibold py-2 px-4 rounded-full text-xs transition-colors flex items-center gap-1.5 focus:outline-none" disabled>
-              <i data-lucide="chevron-left" class="w-4 h-4"></i> Previous
-            </button>
-            <div class="flex items-center gap-1">
-              <button class="bg-brand-primary text-white font-bold w-8 h-8 rounded-full text-xs shadow-sm">1</button>
-              <button class="border border-transparent hover:border-slate-200 text-slate-600 font-semibold w-8 h-8 rounded-full text-xs transition-colors">2</button>
-            </div>
-            <button class="border border-slate-200 hover:border-slate-300 text-slate-600 font-semibold py-2 px-4 rounded-full text-xs transition-colors flex items-center gap-1.5 focus:outline-none">
-              Next <i data-lucide="chevron-right" class="w-4 h-4"></i>
-            </button>
-          </div>
-          ` : ''}
+          ${paginationHtml}
         </section>
 
       </div>
@@ -1876,81 +1945,8 @@ function renderShopView() {
 
   lucide.createIcons();
 
-  // Setup Interaction Hooks in PLP
-  // Category change listener
-  $('.shop-filter-category').on('change', function() {
-    const val = $(this).val();
-    if ($(this).is(':checked')) {
-      STATE.filters.categories.push(val);
-    } else {
-      STATE.filters.categories = STATE.filters.categories.filter(c => c !== val);
-    }
-    renderShopView();
-  });
-
-  // Size buttons listener
-  $('.shop-filter-size-btn').on('click', function() {
-    const val = parseFloat($(this).data('size'));
-    const index = STATE.filters.sizes.indexOf(val);
-    if (index === -1) {
-      STATE.filters.sizes.push(val);
-    } else {
-      STATE.filters.sizes.splice(index, 1);
-    }
-    renderShopView();
-  });
-
-  // Color Swatch buttons listener
-  $('button[data-color]').on('click', function() {
-    const colName = $(this).data('color');
-    const index = STATE.filters.colors.indexOf(colName);
-    if (index === -1) {
-      STATE.filters.colors.push(colName);
-    } else {
-      STATE.filters.colors.splice(index, 1);
-    }
-    renderShopView();
-  });
-
-  // Price range slider
-  $('#price-range-slider').on('input', function() {
-    const maxVal = parseFloat($(this).val());
-    STATE.filters.priceRange[1] = maxVal;
-    $('#price-range-label').text(`$50 - $${maxVal}`);
-  }).on('change', function() {
-    renderShopView();
-  });
-
-  // Gender filters
-  $('.shop-filter-gender').on('change', function() {
-    const val = $(this).val();
-    if ($(this).is(':checked')) {
-      STATE.filters.genders.push(val);
-    } else {
-      STATE.filters.genders = STATE.filters.genders.filter(g => g !== val);
-    }
-    renderShopView();
-  });
-
-  // Sorting
-  $('#shop-sort').on('change', function() {
-    STATE.filters.sort = $(this).val();
-    renderShopView();
-  });
-
-  // Clear button actions
-  $('#sidebar-clear-all, #shop-clear-all-btn, #mobile-filter-clear-all-btn').on('click', function() {
-    STATE.filters.categories = [];
-    STATE.filters.genders = [];
-    STATE.filters.sizes = [];
-    STATE.filters.colors = [];
-    STATE.filters.priceRange = [50, 300];
-    STATE.filters.search = '';
-    renderShopView();
-  });
-
   // Mobile drawer controls
-  $('#mobile-filter-trigger').on('click', function() {
+  $('#mobile-filter-trigger').off().on('click', function() {
     // Clone filters to mobile side
     const $asideContent = $('#shop-sidebar-filters').html();
     $('#mobile-filters-append').html($asideContent);
@@ -1960,56 +1956,9 @@ function renderShopView() {
       $('#mobile-filter-content').removeClass('translate-x-full');
     }, 10);
     lucide.createIcons();
-    
-    // Bind listeners inside mobile drawer
-    $('.shop-filter-category').off().on('change', function() {
-      const val = $(this).val();
-      if ($(this).is(':checked')) {
-        STATE.filters.categories.push(val);
-      } else {
-        STATE.filters.categories = STATE.filters.categories.filter(c => c !== val);
-      }
-    });
-
-    $('.shop-filter-size-btn').off().on('click', function() {
-      const val = parseFloat($(this).data('size'));
-      const index = STATE.filters.sizes.indexOf(val);
-      if (index === -1) {
-        STATE.filters.sizes.push(val);
-      } else {
-        STATE.filters.sizes.splice(index, 1);
-      }
-      $(this).toggleClass('bg-brand-primary border-brand-primary text-white font-bold bg-white text-slate-600');
-    });
-
-    $('button[data-color]').off().on('click', function() {
-      const colName = $(this).data('color');
-      const index = STATE.filters.colors.indexOf(colName);
-      if (index === -1) {
-        STATE.filters.colors.push(colName);
-      } else {
-        STATE.filters.colors.splice(index, 1);
-      }
-      $(this).toggleClass('ring-2 ring-brand-primary ring-offset-2 scale-110');
-    });
-
-    $('#price-range-slider').off().on('input', function() {
-      const maxVal = parseFloat($(this).val());
-      STATE.filters.priceRange[1] = maxVal;
-      $('#price-range-label').text(`$50 - $${maxVal}`);
-    });
-
-    $('.shop-filter-gender').off().on('change', function() {
-      const val = $(this).val();
-      if ($(this).is(':checked')) {
-        STATE.filters.genders.push(val);
-      } else {
-        STATE.filters.genders = STATE.filters.genders.filter(g => g !== val);
-      }
-    });
   });
 
-  $('#mobile-filter-close, #mobile-filter-apply-btn, #mobile-filter-backdrop').on('click', function() {
+  $('#mobile-filter-close, #mobile-filter-apply-btn, #mobile-filter-backdrop').off().on('click', function() {
     $('#mobile-filter-backdrop').addClass('opacity-0');
     $('#mobile-filter-content').addClass('translate-x-full');
     setTimeout(() => {
@@ -2942,6 +2891,187 @@ $(document).ready(function() {
     const email = $('#newsletter-email').val();
     showToast(`Subscribed successfully with ${email}!`, 'success');
     $('#newsletter-email').val('');
+  });
+
+  // ================= DELEGATED PLP FILTERS & PAGINATION LISTENERS =================
+  // 1. Category filter delegation
+  $(document).on('change', '.shop-filter-category', function() {
+    const val = $(this).val();
+    if ($(this).is(':checked')) {
+      if (!STATE.filters.categories.includes(val)) {
+        STATE.filters.categories.push(val);
+      }
+    } else {
+      STATE.filters.categories = STATE.filters.categories.filter(c => c !== val);
+    }
+    
+    // Sync checkbox state between desktop sidebar and mobile drawer
+    $(`.shop-filter-category[value="${val}"]`).prop('checked', $(this).is(':checked'));
+    
+    STATE.filters.page = 1; // Reset to page 1
+    
+    if ($('#mobile-filter-drawer').is(':visible')) {
+      // Inside mobile drawer, don't trigger re-render immediately
+    } else {
+      renderShopView();
+    }
+  });
+
+  // 2. Gender filter delegation
+  $(document).on('change', '.shop-filter-gender', function() {
+    const val = $(this).val();
+    if ($(this).is(':checked')) {
+      if (!STATE.filters.genders.includes(val)) {
+        STATE.filters.genders.push(val);
+      }
+    } else {
+      STATE.filters.genders = STATE.filters.genders.filter(g => g !== val);
+    }
+    
+    // Sync checkbox state between desktop sidebar and mobile drawer
+    $(`.shop-filter-gender[value="${val}"]`).prop('checked', $(this).is(':checked'));
+    
+    STATE.filters.page = 1; // Reset to page 1
+    
+    if ($('#mobile-filter-drawer').is(':visible')) {
+      // Inside mobile drawer, don't trigger re-render immediately
+    } else {
+      renderShopView();
+    }
+  });
+
+  // 3. Size filter delegation
+  $(document).on('click', '.shop-filter-size-btn', function() {
+    const val = parseFloat($(this).data('size'));
+    const index = STATE.filters.sizes.indexOf(val);
+    if (index === -1) {
+      STATE.filters.sizes.push(val);
+    } else {
+      STATE.filters.sizes.splice(index, 1);
+    }
+    
+    // Sync active state visually on both desktop and mobile buttons
+    $(`.shop-filter-size-btn[data-size="${val}"]`).each(function() {
+      const isSelected = STATE.filters.sizes.includes(val);
+      if (isSelected) {
+        $(this).addClass('bg-brand-primary border-brand-primary text-white font-bold shadow-sm').removeClass('border-slate-200 text-slate-600 hover:border-slate-400 bg-white');
+      } else {
+        $(this).removeClass('bg-brand-primary border-brand-primary text-white font-bold shadow-sm').addClass('border-slate-200 text-slate-600 hover:border-slate-400 bg-white');
+      }
+    });
+    
+    STATE.filters.page = 1; // Reset to page 1
+    
+    if ($('#mobile-filter-drawer').is(':visible')) {
+      // Wait for Apply button
+    } else {
+      renderShopView();
+    }
+  });
+
+  // 4. Color filter delegation
+  $(document).on('click', 'button[data-color]', function() {
+    // Only target color buttons that are filters (inside desktop sidebar or mobile drawer)
+    if (!$(this).closest('#shop-sidebar-filters, #mobile-filter-drawer').length) return;
+    
+    const colName = $(this).data('color');
+    const index = STATE.filters.colors.indexOf(colName);
+    if (index === -1) {
+      STATE.filters.colors.push(colName);
+    } else {
+      STATE.filters.colors.splice(index, 1);
+    }
+    
+    // Sync active ring visual selection state on both desktop and mobile swatches matching this color
+    $(`button[data-color="${colName}"]`).each(function() {
+      const isSelected = STATE.filters.colors.includes(colName);
+      if (isSelected) {
+        $(this).addClass('ring-2 ring-brand-primary ring-offset-2 scale-110').removeClass('hover:scale-105 border border-black/10');
+      } else {
+        $(this).removeClass('ring-2 ring-brand-primary ring-offset-2 scale-110').addClass('hover:scale-105 border border-black/10');
+      }
+    });
+    
+    STATE.filters.page = 1; // Reset to page 1
+    
+    if ($('#mobile-filter-drawer').is(':visible')) {
+      // Wait for Apply button
+    } else {
+      renderShopView();
+    }
+  });
+
+  // 5. Price range delegation
+  $(document).on('input', '#price-range-slider', function() {
+    const maxVal = parseFloat($(this).val());
+    STATE.filters.priceRange[1] = maxVal;
+    $('#price-range-label').text(`$50 - $${maxVal}`);
+    
+    // Sync slider value between desktop sidebar and mobile drawer
+    $('#price-range-slider').val(maxVal);
+  });
+
+  $(document).on('change', '#price-range-slider', function() {
+    STATE.filters.page = 1; // Reset to page 1
+    if ($('#mobile-filter-drawer').is(':visible')) {
+      // Wait for Apply button
+    } else {
+      renderShopView();
+    }
+  });
+
+  // 6. Sort delegation
+  $(document).on('change', '#shop-sort', function() {
+    STATE.filters.sort = $(this).val();
+    STATE.filters.page = 1; // Reset to page 1
+    renderShopView();
+  });
+
+  // 7. Clear All delegation
+  $(document).on('click', '#sidebar-clear-all, #shop-clear-all-btn, #mobile-filter-clear-all-btn', function() {
+    STATE.filters.categories = [];
+    STATE.filters.genders = [];
+    STATE.filters.sizes = [];
+    STATE.filters.colors = [];
+    STATE.filters.priceRange = [50, 300];
+    STATE.filters.search = '';
+    STATE.filters.page = 1; // Reset to page 1
+    
+    // Reset range label immediately
+    $('#price-range-label').text(`$50 - $300`);
+    
+    renderShopView();
+  });
+
+  // 8. Pagination delegation
+  $(document).on('click', '.shop-pagination-page-btn', function() {
+    const page = parseInt($(this).data('page'));
+    STATE.filters.page = page;
+    renderShopView();
+    const $target = $('#plp-count-label');
+    if ($target.length) {
+      $('html, body').animate({ scrollTop: $target.offset().top - 100 }, 200);
+    }
+  });
+
+  $(document).on('click', '.shop-pagination-prev-btn', function() {
+    if (STATE.filters.page > 1) {
+      STATE.filters.page -= 1;
+      renderShopView();
+      const $target = $('#plp-count-label');
+      if ($target.length) {
+        $('html, body').animate({ scrollTop: $target.offset().top - 100 }, 200);
+      }
+    }
+  });
+
+  $(document).on('click', '.shop-pagination-next-btn', function() {
+    STATE.filters.page += 1;
+    renderShopView();
+    const $target = $('#plp-count-label');
+    if ($target.length) {
+      $('html, body').animate({ scrollTop: $target.offset().top - 100 }, 200);
+    }
   });
 });
 
